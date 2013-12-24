@@ -61,6 +61,9 @@ public class SettingsActivity extends Activity implements OnCheckedChangeListene
 		sb.setProgress(conf.mMotionSensitivityLevel);
 		((TextView) findViewById(R.id.tvMotionSensitivity)).setText(String.valueOf(sb.getProgress()));
 		
+		Spinner spinner = (Spinner) findViewById(R.id.spinNotificationMode);
+		spinner.setSelection(conf.mNotificationMode);
+		
 		mSetupListeners();
 		
 		mStateDetector = new StateDetector(this);
@@ -91,9 +94,6 @@ public class SettingsActivity extends Activity implements OnCheckedChangeListene
 		getMenuInflater().inflate(R.menu.settings, menu);
 		return true;
 	}
-	
-	
-
 	
 	private boolean isMyServiceRunning() 
 	{

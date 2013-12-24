@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 public class EcoScreenServiceLauncher extends Service {
 
@@ -60,6 +61,10 @@ public class EcoScreenServiceLauncher extends Service {
 			startService(myIntent);
 			mRegisterReceiver();
 		}
+		else
+			Toast.makeText(this, "EcoScreenServiceLauncher.onStartCommand()" 
+					+ "extras null? " + extras, 
+					Toast.LENGTH_LONG).show();
 		return Service.START_STICKY;
 	}
 

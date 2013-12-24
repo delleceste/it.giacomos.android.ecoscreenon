@@ -185,7 +185,6 @@ public class EcoScreenService extends Service implements StateListener, Activity
 		{
 			iconId = R.drawable.ic_statusbar_detecting;
 			msg = res.getString(R.string.shake);
-			doNotify = (doNotify && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT));
 		}
 		else if(mState.getType() == StateType.DETECTING && a == Action.KEEP_ON)
 		{
@@ -199,6 +198,11 @@ public class EcoScreenService extends Service implements StateListener, Activity
 			iconId = R.drawable.ic_statusbar_on;
 		}
 		
+		if(mState.getType() == StateType.DETECTING)
+			doNotify = (doNotify && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT));
+		else if(mState.getType() == StateType.IDLE && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT))
+			doNotify = false;
+		
 		CharSequence motionDetectionEnabled;
 		if(mConfiguration.mMotionDetectionEnabled)
 			motionDetectionEnabled = getResources().getString(R.string.disable_motion_detection);
@@ -207,7 +211,6 @@ public class EcoScreenService extends Service implements StateListener, Activity
 		
 		mNotificationView.setCharSequence(R.id.btMotionDetection, "setText", motionDetectionEnabled);
 		
-
 		NotificationManager mNotificationManager =
 		    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		if(doNotify || mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ALWAYS_ON)
