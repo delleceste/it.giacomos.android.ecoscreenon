@@ -50,9 +50,9 @@ public class StateDetector  implements SensorEventListener
 	{
 		if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
 		{
-			Log.e("Accelerometer ", Math.round(event.values[0]) + " " + Math.round(event.values[1]) + " " +
-					Math.round(event.values[2]) + " thresh " + yThresh + " motion sensitivity " +
-					mMotionSensitivityValues.v0 + ", " + mMotionSensitivityValues.v2);
+//			Log.e("Accelerometer ", Math.round(event.values[0]) + " " + Math.round(event.values[1]) + " " +
+//					Math.round(event.values[2]) + " thresh " + yThresh + " motion sensitivity " +
+//					mMotionSensitivityValues.v0 + ", " + mMotionSensitivityValues.v2);
 			
 //			Log.e("Accelerometer ", (event.values[0]) + " " + (event.values[1]) + " " +
 //					(event.values[2]));
@@ -71,7 +71,8 @@ public class StateDetector  implements SensorEventListener
 //						Math.round(event.values[2]) + ": unregistering listener");
 				mHorizontal = false;
 			}
-			else if(mPreviousValues == null && motionDetectionEnabled)
+			/* if, not else if as in the service implementation */
+			if(mPreviousValues == null && motionDetectionEnabled)
 			{
 				mPreviousValues = new float[3];
 				System.arraycopy(event.values, 0, mPreviousValues, 0, 3);
@@ -100,7 +101,7 @@ public class StateDetector  implements SensorEventListener
 				
 			}
 			mStateDetectorListener.onDeviceMoved(mMoved);
-			mStateDetectorListener.onDeviceInclinated(!mHorizontal);
+			mStateDetectorListener.onDeviceInclined(!mHorizontal);
 		}
 	}
 

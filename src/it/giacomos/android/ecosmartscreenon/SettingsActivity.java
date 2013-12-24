@@ -255,7 +255,7 @@ public class SettingsActivity extends Activity implements OnCheckedChangeListene
 	}
 
 	@Override
-	public void onDeviceInclinated(boolean inclinated) 
+	public void onDeviceInclined(boolean inclinated) 
 	{
 		int resId, stringId;
 		if(inclinated)

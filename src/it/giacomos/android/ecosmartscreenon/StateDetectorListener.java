@@ -5,5 +5,5 @@ public interface StateDetectorListener
 {
 	public void onDeviceMoved(boolean moved);
 	
-	public void onDeviceInclinated(boolean inclinated);
+	public void onDeviceInclined(boolean inclinated);
 }

@@ -32,39 +32,26 @@ public class EcoScreenServiceLauncher extends Service {
 		Bundle extras = intent.getExtras();
 		if(extras != null && extras.getBoolean("onBoot"))
 		{
-			boolean startBypassingPrefs = false;
-			startBypassingPrefs = (extras.containsKey("startBypassingPrefs") 
-				&& extras.getBoolean("startBypassingPrefs"));
 			SharedPreferences shPref = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
 		
 			Log.e("EcoScreenServiceLauncher.onStartCommand()", "onBoot"
 				+ (shPref.getBoolean("EcoScreenServiceEnable", true) == true));
 
-			if(shPref.getBoolean("EcoScreenServiceEnable", true) == true || startBypassingPrefs)
+			if(shPref.getBoolean("EcoScreenServiceEnable", true))
 			{
 				mRegisterReceiver();
 				/* on boot: service will be started on action user present */
 		        Log.e("EcoScreenServiceLauncher.onStartCommand()", "registering receivers");
 			}
 		}
-		else if(extras != null && extras.getBoolean("restartService"))
-		{
-			Log.e("EcoScreenServiceLauncher.onStartCommand", "RESTARTING EcoScreenService");
-			Intent myIntent = new Intent(this, EcoScreenService.class);
-			stopService(myIntent);
-			startService(myIntent);
-			mRegisterReceiver();
-		}
-		else if(extras != null && extras.getBoolean("startService"))
-		{
-			Intent myIntent = new Intent(this, EcoScreenService.class);
-			startService(myIntent);
-			mRegisterReceiver();
-		}
 		else
-			Toast.makeText(this, "EcoScreenServiceLauncher.onStartCommand()" 
-					+ "extras null? " + extras, 
-					Toast.LENGTH_LONG).show();
+		{
+			Intent myIntent = new Intent(this, EcoScreenService.class);
+//			stopService(myIntent);
+			startService(myIntent);
+			mRegisterReceiver();
+		}
+		
 		return Service.START_STICKY;
 	}
 

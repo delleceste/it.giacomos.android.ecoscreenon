@@ -34,5 +34,6 @@
         <string name="current_timeout_is">Current Screen Timeout Is</string>
         <string name="default_timeout_s_60">60</string>
         <string name="seconds">s</string>
+        <string name="start_detection_after_seconds">"Start Detection After "</string>
 
 </resources>
