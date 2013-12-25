@@ -15,15 +15,10 @@ import android.content.res.Resources;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.os.SystemClock;
-import android.provider.Settings;
-import android.provider.Settings.SettingNotFoundException;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.util.SparseArray;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 public class EcoScreenService extends Service implements StateListener, ActivityBroadcastReceiverListener
@@ -110,10 +105,24 @@ public class EcoScreenService extends Service implements StateListener, Activity
 	public void onStateLeaving(StateType t, Action a) 
 	{
 		Log.e("onStateLeaving", "type " + t + " action " + a);
-		if(a == Action.CANCELLED)
+		/* Action.CANCELLED cannot be set */
+		if(a == Action.NONE)
 		{
+			Log.e("EcoScreenService.onStateLeaving", "RELEASING WAKE LOCK BRIGHT Action " + a);
+			if(mScreenWL != null && mScreenWL.isHeld())
+			{
+				mScreenWL.release();
+				mScreenWL = null;
+			}
+			//			Toast.makeText(this, "No user action detected", Toast.LENGTH_LONG).show();
+			mState = new IdleState(mConfiguration.mMigrateToActiveTimeo, this);
 		}
-		if(t == StateType.DETECTING && a == Action.KEEP_ON)
+		else if(t == StateType.DETECTING && a == Action.KEEP_ON)
+		{
+			/* must test proximity */
+			mState = new StateDetectingProximity(this, this);
+		}
+		else if(t == StateType.DETECTING_PROXIMITY && a == Action.KEEP_ON)
 		{
 			//			Toast.makeText(this, "Triggering user action and waiting other " + mMigrateToActiveTimeo + "ms", Toast.LENGTH_LONG).show();
 			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -127,24 +136,13 @@ public class EcoScreenService extends Service implements StateListener, Activity
 			/* restart cycle */
 			mState = new IdleState(mConfiguration.mMigrateToActiveTimeo, this);
 		}
-		else if(t == StateType.IDLE && a == Action.IDLE_LEFT)
+		else if(t == StateType.IDLE && a == Action.IDLE_TIMEOUT)
 		{
 			//			Toast.makeText(this, "Going to DetectMode ", Toast.LENGTH_SHORT).show();
 			StateDetecting sDetect = new StateDetecting(this, mConfiguration.mScreenTimeo - mConfiguration.mMigrateToActiveTimeo, 
 					this, mConfiguration.getMotionSensitivityValues());
 			sDetect.setThresholds(mConfiguration.mXInclinationThresh, mConfiguration.mYInclinationThresh);
 			mState = sDetect;
-		}
-		else if(t == StateType.DETECTING && a == Action.NONE)
-		{
-			Log.e("EcoScreenService.onStateLeaving", "RELEASINGs WAKE LOCK BRIGHT");
-			if(mScreenWL != null && mScreenWL.isHeld())
-			{
-				mScreenWL.release();
-				mScreenWL = null;
-			}
-			//			Toast.makeText(this, "No user action detected", Toast.LENGTH_LONG).show();
-			mState = new IdleState(mConfiguration.mMigrateToActiveTimeo, this);
 		}
 		mBuildNotification(a);
 	}
@@ -185,27 +183,29 @@ public class EcoScreenService extends Service implements StateListener, Activity
 
 		Resources res = getResources();
 		String msg = res.getString(R.string.goingoff);
+		StateType st = mState.getType();
+		boolean detecting = (st == StateType.DETECTING || st == StateType.DETECTING_PROXIMITY);
 		int iconId = R.drawable.ic_statusbar_off;
-		if(mState.getType() == StateType.DETECTING && a != Action.KEEP_ON)
+		if(detecting && a != Action.KEEP_ON)
 		{
 			iconId = R.drawable.ic_statusbar_detecting;
 			msg = res.getString(R.string.shake);
 		}
-		else if(mState.getType() == StateType.DETECTING && a == Action.KEEP_ON)
+		else if(detecting && a == Action.KEEP_ON)
 		{
 			/* when invoked by onKeepOnRenewal */
 			iconId = R.drawable.ic_statusbar_on;
 			msg = res.getString(R.string.shake);
 		}
-		else if(mState.getType() == StateType.IDLE && a == Action.KEEP_ON)
+		else if(st == StateType.IDLE && a == Action.KEEP_ON)
 		{
 			msg = res.getString(R.string.stayingon);
 			iconId = R.drawable.ic_statusbar_on;
 		}
 
-		if(mState.getType() == StateType.DETECTING)
+		if(detecting)
 			doNotify = (doNotify && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT));
-		else if(mState.getType() == StateType.IDLE && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT))
+		else if(st == StateType.IDLE && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT))
 			doNotify = false;
 
 		NotificationManager mNotificationManager =

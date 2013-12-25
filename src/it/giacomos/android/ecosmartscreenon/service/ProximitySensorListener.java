@@ -12,6 +12,7 @@ public class ProximitySensorListener implements SensorEventListener
 	private ProximitySensorListenerListener mProximitySensorListenerListener;
 	private SensorManager mSensorManager;
 	private boolean mSensorRegistered;
+	private int mUpdateCount;
 
 	public ProximitySensorListener(ProximitySensorListenerListener l)
 	{
@@ -27,6 +28,7 @@ public class ProximitySensorListener implements SensorEventListener
 			mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY), 
 					SensorManager.SENSOR_DELAY_NORMAL);
 			mSensorRegistered = true;
+			mUpdateCount = 0;
 		}
 	}
 	
@@ -49,7 +51,10 @@ public class ProximitySensorListener implements SensorEventListener
 	public void onSensorChanged(SensorEvent event) 
 	{
 		float distance = event.values[0];
-		mProximitySensorListenerListener.onProximityChanged(distance < event.sensor.getMaximumRange());
+		mUpdateCount++;
+		Log.e("ProximitySensorListener", " value " + distance);
+		mProximitySensorListenerListener.onProximityChanged(distance < event.sensor.getMaximumRange(),
+				mUpdateCount);
 	}
 
 

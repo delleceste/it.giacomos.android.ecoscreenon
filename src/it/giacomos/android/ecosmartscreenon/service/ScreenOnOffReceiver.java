@@ -60,7 +60,6 @@ public class ScreenOnOffReceiver extends BroadcastReceiver {
 		else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT))
 		{
 	    	Log.e("+ ScreenOnOffReceiver ACTION_USER_PRESENT", "starting ScreenOnOffService");
-	    	Toast.makeText(context, "starting EcoScreenService", Toast.LENGTH_SHORT).show();
 	        Intent myIntent = new Intent(context, EcoScreenService.class);
 			context.startService(myIntent);
 		}

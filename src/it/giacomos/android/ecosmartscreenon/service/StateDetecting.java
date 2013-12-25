@@ -9,8 +9,7 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.util.Log;
 
-public class StateDetecting implements State, SensorEventListener, Runnable,
-ProximitySensorListenerListener
+public class StateDetecting implements State, SensorEventListener, Runnable
 {
 
 	private SensorManager mSensorManager;
@@ -21,8 +20,6 @@ ProximitySensorListenerListener
 	private int mXThresh, mYThresh;
 	private boolean mMoved, mHorizontal;
 	private Action mAction;
-	private boolean mWeAreNear;
-	private ProximitySensorListener mProximitySensorListener;
 	
 	int mTimeout;
 
@@ -44,7 +41,6 @@ ProximitySensorListenerListener
 		mTimeout = Math.round(timeoutMillis * 0.90f);
 		mMotionSensitivityValues = msv;
 		mAction = Action.NONE; /* init */
-		mWeAreNear = false; /* proximity sensor value */
 		
 //		Log.e("timeout will be ", "timeot " + mTimeout);
 		
@@ -60,12 +56,6 @@ ProximitySensorListenerListener
 			mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), 
 					SensorManager.SENSOR_DELAY_NORMAL);
 		}
-		/* proximity sensor listener. Must be a separate listener because the sensor must remain
-		 * active until the end of the time this state is running.
-		 * 
-		 */
-		mProximitySensorListener = new ProximitySensorListener(this);
-		mProximitySensorListener.start(ctx);
 
 		/* whenever this setting changes, the service is reloaded, so it is enough to initialize 
 		 * this value here.
@@ -103,16 +93,6 @@ ProximitySensorListenerListener
 	}
 
 	@Override
-	public void cancel() 
-	{
-		mAction = Action.CANCELLED;
-		mHandler.removeCallbacks(this);
-		mSensorManager.unregisterListener(this);
-		mProximitySensorListener.stop();
-		mStateListener.onStateLeaving(StateType.DETECTING, Action.CANCELLED);
-	}
-	
-	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) 
 	{
 		// TODO Auto-generated method stub
@@ -143,7 +123,6 @@ ProximitySensorListenerListener
 //						"," + Math.round(event.values[1]) + ", " +
 //						Math.round(event.values[2]) + ": unregistering listener");
 				mHorizontal = false;
-				mSensorManager.unregisterListener(this);
 			}
 			else if(mPreviousValues == null && mMotionDetectionEnabled)
 			{
@@ -167,7 +146,6 @@ ProximitySensorListenerListener
 				if(mMoved)
 				{
 //					Log.e("onSensorChanged", "moved " + mMoved + ", horizontal " + mHorizontal + " unregistering ");
-					mSensorManager.unregisterListener(this);
 				}
 				else /* not horizontal, not moved, save data for next sensor update */
 					System.arraycopy(event.values, 0, mPreviousValues, 0, 3);
@@ -183,51 +161,51 @@ ProximitySensorListenerListener
 			if(mMoved || !mHorizontal)
 			{
 				mAction = Action.KEEP_ON;
-				mStateListener.onKeepOnRenewal(Action.KEEP_ON);
+				mLeave();
 			}
 		}
 	}
 
-
 	@Override
-	public void run() {
-		
-		mSensorManager.unregisterListener(this);
-		mProximitySensorListener.stop();
-		
+	/* clears callbacks and listeners but does not trigger a state transition */
+	public void cancel() 
+	{
+		mClear();
+	}
+	
+	private void mClear()
+	{
+		/* if not coming from run() */
+		mHandler.removeCallbacks(this); 
+		/* if not already unregistered in mScreenNeedsRenewal */
+		mSensorManager.unregisterListener(this); 
+	}
+	
+	/** clears callbacks and listeners and does trigger a state transition */
+	private void mLeave()
+	{	
 		Log.e("StateActive.run()", "leaving state DETECTING " + mMoved + ", hor " + mHorizontal 
-				+ " weare near " + mWeAreNear);
-		if((mMoved || !mHorizontal) && !mWeAreNear)
+				 + " mAction " + mAction);
+		
+		mClear();
+		
+		if(mMoved || !mHorizontal)
 		{
 			mAction = Action.KEEP_ON;
-			this.mStateListener.onStateLeaving(getType(), mAction);
+			this.mStateListener.onStateLeaving(StateType.DETECTING, mAction);
 		}
 		else
 		{
 			mAction = Action.NONE;
-			this.mStateListener.onStateLeaving(getType(), mAction);
+			this.mStateListener.onStateLeaving(StateType.DETECTING, mAction);
 		}
 
 	}
 
 	@Override
-	public void onProximityChanged(boolean near)
+	public void run() 
 	{
-		Log.e("StateDetecting.onProximityChanged", "near " + near);
-		mWeAreNear = near;
+		mLeave();
 	}
-
-//	private void mRecalculateAngles() 
-//	{
-//		if(mAccelChanged && mMagFChanged)
-//		{
-//			SensorManager.getRotationMatrix(mRotationMatrix, null, mValuesAccel, mValuesMagnet);
-//			SensorManager.getOrientation(mRotationMatrix, mValuesOrientation);
-//			final String test;
-//			test = "results: " + Math.toDegrees(mValuesOrientation[0])
-//					+" "+ Math.toDegrees(mValuesOrientation[1])+ " "+ Math.toDegrees(mValuesOrientation[2]);
-//			// Log.e("mRecalculateAngles", test);
-//		}
-//	}
 	
 }
