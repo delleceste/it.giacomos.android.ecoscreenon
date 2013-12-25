@@ -89,4 +89,10 @@ SensorEventListener, Runnable
 		else
 			mAction = Action.KEEP_ON;
 	}
+	
+	@Override
+	public boolean isSensorsIdleState()
+	{
+		return false;
+	}
 }

@@ -62,15 +62,12 @@ public class EcoScreenService extends Service implements StateListener, Activity
 				mConfiguration.mMigrateToActiveTimeo = mConfiguration.mScreenTimeo - 10000;
 
 				/* when screen goes on we start in IDLE state */
-				mState = new IdleState(mConfiguration.mMigrateToActiveTimeo, this);
+				WakeLockHoldState wakeLockHoldState  = new WakeLockHoldState(this, mConfiguration.mMigrateToActiveTimeo, this, mScreenWL);
+				mScreenWL = wakeLockHoldState.getWakeLock();
+				mState = wakeLockHoldState; /* update reference to new wakelock */
 				/* start with the green notification icon */
 				mBuildNotification(Action.KEEP_ON);
-				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-				/* acquire lock bright in order that the system does not dim while we keep the
-				 * screen active.
-				 */
-				mScreenWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "EcoScreenService");
-				mScreenWL.acquire();
+				
 			}
 			else
 			{
@@ -109,13 +106,8 @@ public class EcoScreenService extends Service implements StateListener, Activity
 		if(a == Action.NONE)
 		{
 			Log.e("EcoScreenService.onStateLeaving", "RELEASING WAKE LOCK BRIGHT Action " + a);
-			if(mScreenWL != null && mScreenWL.isHeld())
-			{
-				mScreenWL.release();
-				mScreenWL = null;
-			}
 			//			Toast.makeText(this, "No user action detected", Toast.LENGTH_LONG).show();
-			mState = new IdleState(mConfiguration.mMigrateToActiveTimeo, this);
+			mState = new WakeLockReleaseState(mConfiguration.mMigrateToActiveTimeo, this, mScreenWL);
 		}
 		else if(t == StateType.DETECTING && a == Action.KEEP_ON)
 		{
@@ -125,18 +117,14 @@ public class EcoScreenService extends Service implements StateListener, Activity
 		else if(t == StateType.DETECTING_PROXIMITY && a == Action.KEEP_ON)
 		{
 			//			Toast.makeText(this, "Triggering user action and waiting other " + mMigrateToActiveTimeo + "ms", Toast.LENGTH_LONG).show();
-			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-			Log.e("EcoScreenService.onStateLeaving", "GETTING WAKE LOCK BRIGHT");
-			if(mScreenWL == null || !mScreenWL.isHeld())
-			{
-				mScreenWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "EcoScreenService");
-				mScreenWL.acquire();
-			}
 			/* Otherwise the screen lock is already allocated and held */
 			/* restart cycle */
-			mState = new IdleState(mConfiguration.mMigrateToActiveTimeo, this);
+			WakeLockHoldState wakeLockHoldState = new WakeLockHoldState(this, mConfiguration.mMigrateToActiveTimeo, this, mScreenWL);
+			mState = wakeLockHoldState;
+			/* keep reference to the new wakelock */
+			mScreenWL = wakeLockHoldState.getWakeLock();
 		}
-		else if(t == StateType.IDLE && a == Action.IDLE_TIMEOUT)
+		else if(mState.isSensorsIdleState() && a == Action.IDLE_SENSORS_TIMEOUT)
 		{
 			//			Toast.makeText(this, "Going to DetectMode ", Toast.LENGTH_SHORT).show();
 			StateDetecting sDetect = new StateDetecting(this, mConfiguration.mScreenTimeo - mConfiguration.mMigrateToActiveTimeo, 
@@ -153,10 +141,16 @@ public class EcoScreenService extends Service implements StateListener, Activity
 		Log.e("EcoScreenService.onDestroy", "cancelling state, RELEASING LOCK");
 		if(mState != null) /* may be null if system screen off timeout is too short */
 			mState.cancel();
-
+		
+		Log.e("EcoScreenService.onDestroy", "cancelling state, RELEASING LOCK "
+				+ mScreenWL);
+		
 		if(mScreenWL != null && mScreenWL.isHeld())
+		{
 			mScreenWL.release();
-
+			Log.e("EcoScreenService.onDestroy", " RELEASING LOCK ");
+		}
+		
 		NotificationManager mNotificationManager =
 				(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.cancel(mNotificationID);
@@ -184,20 +178,14 @@ public class EcoScreenService extends Service implements StateListener, Activity
 		Resources res = getResources();
 		String msg = res.getString(R.string.goingoff);
 		StateType st = mState.getType();
-		boolean detecting = (st == StateType.DETECTING || st == StateType.DETECTING_PROXIMITY);
+		boolean detecting = !mState.isSensorsIdleState();
 		int iconId = R.drawable.ic_statusbar_off;
-		if(detecting && a != Action.KEEP_ON)
+		if(detecting)
 		{
 			iconId = R.drawable.ic_statusbar_detecting;
 			msg = res.getString(R.string.shake);
 		}
-		else if(detecting && a == Action.KEEP_ON)
-		{
-			/* when invoked by onKeepOnRenewal */
-			iconId = R.drawable.ic_statusbar_on;
-			msg = res.getString(R.string.shake);
-		}
-		else if(st == StateType.IDLE && a == Action.KEEP_ON)
+		else if(st == StateType.WAKELOCK_HOLD)
 		{
 			msg = res.getString(R.string.stayingon);
 			iconId = R.drawable.ic_statusbar_on;
@@ -205,7 +193,7 @@ public class EcoScreenService extends Service implements StateListener, Activity
 
 		if(detecting)
 			doNotify = (doNotify && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT));
-		else if(st == StateType.IDLE && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT))
+		else if(!mState.isSensorsIdleState() && (mConfiguration.mNotificationMode == Configuration.NOTIFICATION_MODE_ON_DETECT))
 			doNotify = false;
 
 		NotificationManager mNotificationManager =

@@ -7,4 +7,6 @@ public interface State
 	public Action getAction();
 	
 	public void cancel();
+	
+	public boolean isSensorsIdleState();
 }

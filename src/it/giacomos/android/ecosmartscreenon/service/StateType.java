@@ -1,5 +1,5 @@
 package it.giacomos.android.ecosmartscreenon.service;
 
 public enum StateType {
-	IDLE, DETECTING, STOPPED, DETECTING_PROXIMITY;
+	DETECTING, STOPPED, DETECTING_PROXIMITY, WAKELOCK_HOLD, WAKELOCK_RELEASE;
 }

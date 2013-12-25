@@ -207,5 +207,11 @@ public class StateDetecting implements State, SensorEventListener, Runnable
 	{
 		mLeave();
 	}
+
+	@Override
+	public boolean isSensorsIdleState()
+	{
+		return false;
+	}
 	
 }
