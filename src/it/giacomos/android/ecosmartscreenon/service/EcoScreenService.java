@@ -70,6 +70,12 @@ public class EcoScreenService extends Service implements StateListener, Activity
 				mState = new IdleState(mConfiguration.mMigrateToActiveTimeo, this);
 				/* start with the green notification icon */
 				mBuildNotification(Action.KEEP_ON);
+				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+				/* acquire lock bright in order that the system does not dim while we keep the
+				 * screen active.
+				 */
+				mScreenWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "EcoScreenService");
+				mScreenWL.acquire();
 			}
 			else
 			{
@@ -115,7 +121,6 @@ public class EcoScreenService extends Service implements StateListener, Activity
 			if(mScreenWL == null || !mScreenWL.isHeld())
 			{
 				mScreenWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "EcoScreenService");
-				//				pm.userActivity(SystemClock.uptimeMillis(), false);
 				mScreenWL.acquire();
 			}
 			/* Otherwise the screen lock is already allocated and held */

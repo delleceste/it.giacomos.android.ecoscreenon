@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="it.giacomos.android.ecosmartscreenon"
-    android:versionCode="7"
-    android:versionName="release_0_0_1_dev" >
+    android:versionCode="9"
+    android:versionName="release_0_0_2_dev" >
 
     <uses-sdk
         android:minSdkVersion="9"
@@ -17,6 +17,7 @@
         android:label="@string/app_name" >
         <activity
             android:name="it.giacomos.android.ecosmartscreenon.SettingsActivity"
+            android:windowSoftInputMode="stateHidden"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

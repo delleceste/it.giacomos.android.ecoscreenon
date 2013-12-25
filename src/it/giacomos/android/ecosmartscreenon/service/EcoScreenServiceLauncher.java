@@ -67,7 +67,7 @@ public class EcoScreenServiceLauncher extends Service {
 	{
 		IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
-        //filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
         
         if(mScreenOnOffReceiver == null)
         {

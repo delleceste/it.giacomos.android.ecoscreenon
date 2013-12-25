@@ -8,9 +8,10 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.util.Log;
-import android.util.SparseArray;
 
-public class StateDetecting implements State, SensorEventListener, Runnable {
+public class StateDetecting implements State, SensorEventListener, Runnable,
+ProximitySensorListenerListener
+{
 
 	private SensorManager mSensorManager;
 	private StateListener mStateListener;
@@ -20,6 +21,8 @@ public class StateDetecting implements State, SensorEventListener, Runnable {
 	private int mXThresh, mYThresh;
 	private boolean mMoved, mHorizontal;
 	private Action mAction;
+	private boolean mWeAreNear;
+	private ProximitySensorListener mProximitySensorListener;
 	
 	int mTimeout;
 
@@ -41,6 +44,7 @@ public class StateDetecting implements State, SensorEventListener, Runnable {
 		mTimeout = Math.round(timeoutMillis * 0.90f);
 		mMotionSensitivityValues = msv;
 		mAction = Action.NONE; /* init */
+		mWeAreNear = false; /* proximity sensor value */
 		
 //		Log.e("timeout will be ", "timeot " + mTimeout);
 		
@@ -56,6 +60,12 @@ public class StateDetecting implements State, SensorEventListener, Runnable {
 			mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), 
 					SensorManager.SENSOR_DELAY_NORMAL);
 		}
+		/* proximity sensor listener. Must be a separate listener because the sensor must remain
+		 * active until the end of the time this state is running.
+		 * 
+		 */
+		mProximitySensorListener = new ProximitySensorListener(this);
+		mProximitySensorListener.start(ctx);
 
 		/* whenever this setting changes, the service is reloaded, so it is enough to initialize 
 		 * this value here.
@@ -98,6 +108,7 @@ public class StateDetecting implements State, SensorEventListener, Runnable {
 		mAction = Action.CANCELLED;
 		mHandler.removeCallbacks(this);
 		mSensorManager.unregisterListener(this);
+		mProximitySensorListener.stop();
 		mStateListener.onStateLeaving(StateType.DETECTING, Action.CANCELLED);
 	}
 	
@@ -112,13 +123,13 @@ public class StateDetecting implements State, SensorEventListener, Runnable {
 	{
 		if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
 		{
-			Log.e("Accelerometer ", Math.round(event.values[0]) + " " + Math.round(event.values[1]) + " " +
-					Math.round(event.values[2]) + " thresh " + mYThresh + " motion sensitivity " +
-					mMotionSensitivityValues.v0 + ", " + mMotionSensitivityValues.v2);
+//			Log.e("Accelerometer ", Math.round(event.values[0]) + " " + Math.round(event.values[1]) + " " +
+//					Math.round(event.values[2]) + " thresh " + mYThresh + " motion sensitivity " +
+//					mMotionSensitivityValues.v0 + ", " + mMotionSensitivityValues.v2);
 			
 //			Log.e("Accelerometer ", (event.values[0]) + " " + (event.values[1]) + " " +
 //					(event.values[2]));
-			
+
 			mMoved = false;
 			mHorizontal = true;
 			
@@ -182,8 +193,11 @@ public class StateDetecting implements State, SensorEventListener, Runnable {
 	public void run() {
 		
 		mSensorManager.unregisterListener(this);
-		Log.e("StateActive.run()", "leaving state DETECTING");
-		if(mMoved || !mHorizontal)
+		mProximitySensorListener.stop();
+		
+		Log.e("StateActive.run()", "leaving state DETECTING " + mMoved + ", hor " + mHorizontal 
+				+ " weare near " + mWeAreNear);
+		if((mMoved || !mHorizontal) && !mWeAreNear)
 		{
 			mAction = Action.KEEP_ON;
 			this.mStateListener.onStateLeaving(getType(), mAction);
@@ -194,6 +208,13 @@ public class StateDetecting implements State, SensorEventListener, Runnable {
 			this.mStateListener.onStateLeaving(getType(), mAction);
 		}
 
+	}
+
+	@Override
+	public void onProximityChanged(boolean near)
+	{
+		Log.e("StateDetecting.onProximityChanged", "near " + near);
+		mWeAreNear = near;
 	}
 
 //	private void mRecalculateAngles() 

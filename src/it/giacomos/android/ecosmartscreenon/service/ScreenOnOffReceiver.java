@@ -50,12 +50,12 @@ public class ScreenOnOffReceiver extends BroadcastReceiver {
 	    	{
 	    		Log.e("+ ScreenOnOffReceiver ACTION_SCREEN_ON", "screen is locked!!");
 	    	}
-//	    	else
-//	    	{
-//	    		Log.e("+ ScreenOnOffReceiver ACTION_SCREEN_ON", "starting ScreenOnOffService");
-//	    		Intent myIntent = new Intent(context, EcoScreenService.class);
-//	    		context.startService(myIntent);
-//	    	}
+	    	else
+	    	{
+	    		Log.e("+ ScreenOnOffReceiver ACTION_SCREEN_ON", "starting ScreenOnOffService");
+	    		Intent myIntent = new Intent(context, EcoScreenService.class);
+	    		context.startService(myIntent);
+	    	}
 		}
 		else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT))
 		{
