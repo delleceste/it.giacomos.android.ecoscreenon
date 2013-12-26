@@ -55,31 +55,36 @@
             >
 
             <LinearLayout
+                android:id="@+id/layoutScreenTimeout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="6dp" >
+                android:layout_height="wrap_content" 
+            android:paddingTop="10dp" 
+            android:paddingBottom="8dp" >
 
                 <TextView
-                    android:id="@+id/tvCurrentTimeout"
+                	android:id="@+id/tvScreenTimeout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/current_timeout_is"
+                    android:text="@string/change_screen_timeout"
+                    android:gravity="center"
+                    android:layout_gravity="center"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
-                <TextView
-                    android:id="@+id/tvTimeoMs"
-                    android:layout_width="wrap_content"
+                <Spinner
+                    android:id="@+id/spScreenTimeo"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:padding="6dp"
-                    android:text="@string/default_timeout_s_60"
-                    android:textAppearance="?android:attr/textAppearanceMedium" />
+                    android:entries="@array/screen_timeo_spinner_entries"
+                    android:layout_weight="1" />
 
                 <TextView
                     android:id="@+id/tvSeconds"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="3dp"
+                    android:layout_height="match_parent"
+                    android:padding="6dp"
                     android:text="@string/seconds"
+                    android:gravity="center"
+                    android:layout_gravity="center"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
             </LinearLayout>
@@ -99,7 +104,7 @@
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
                 <EditText
-                    android:id="@+id/editText1"
+                    android:id="@+id/etDetectionTime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -274,6 +279,13 @@
                 android:entries="@array/notif_spinner_entries"
                 android:gravity="right" />
         </LinearLayout>
+
+        <Button
+            android:id="@+id/btTour"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/make_tour" />
+
     </LinearLayout>
 
 </ScrollView>

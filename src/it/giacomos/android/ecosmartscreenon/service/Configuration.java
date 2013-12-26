@@ -74,23 +74,11 @@ public class Configuration
 			return mMotionSensitivities.get(0);
 		return msv;
 	}
-	
-	public void store(Context ctx)
-	{
-		SharedPreferences mSharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), Context.MODE_PRIVATE);
-		SharedPreferences.Editor e = mSharedPrefs.edit();
-		e.putInt("NOTIFICATION_MODE", mNotificationMode);
-		e.putInt("X_INCLINATION_THRESH", mXInclinationThresh);
-		e.putInt("Y_INCLINATION_THRESH", mYInclinationThresh);
-		e.putInt("MOTION_SENSITIVITY_LEVEL", mMotionSensitivityLevel);
-		e.putInt("DETECTING_TIME", this.mDetectingTime);
-		e.commit();
-	}
 
 	public void update(Intent intent) {
 
 		/* mScreenTimeo, mdetectingTime */
-		if(intent.hasExtra("detectingTime"))
+		if(intent.hasExtra("detectionTime"))
 			mDetectingTime = intent.getIntExtra("detectingTime", 8000);
 		if(intent.hasExtra("notificationMode"))
 			mNotificationMode = intent.getIntExtra("notificationMode", NOTIFICATION_MODE_ALWAYS_ON);
@@ -98,6 +86,8 @@ public class Configuration
 			mMotionSensitivityLevel = intent.getIntExtra("motionSensitivityLevel", 0);
 		if(intent.hasExtra("yInclinationThresh"))
 			mYInclinationThresh = intent.getIntExtra("yInclinationThresh", 0);
+		if(intent.hasExtra("screenTimeout"))
+			mScreenTimeo = intent.getIntExtra("screenTimeout", 60000);
 		
 	}
 }

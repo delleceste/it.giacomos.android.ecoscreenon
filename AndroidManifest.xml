@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="it.giacomos.android.ecosmartscreenon"
     android:versionCode="9"
-    android:versionName="release_0_0_2_dev" >
+    android:versionName="release_0_0_2_dev" android:installLocation="internalOnly">
 
     <uses-sdk
         android:minSdkVersion="9"

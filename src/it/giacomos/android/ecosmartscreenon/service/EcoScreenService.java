@@ -59,7 +59,9 @@ public class EcoScreenService extends Service implements StateListener, Activity
 			if(mConfiguration.isValid())
 			{
 				/* when screen goes on we start in IDLE state */
-				WakeLockHold wakeLockHoldState  = new WakeLockHold(this, mConfiguration.mDetectingTime, this, mScreenWL);
+				int idleTime = mConfiguration.mScreenTimeo - mConfiguration.mDetectingTime -
+						DetectingProximity.PROXIMITY_DETECTION_TIME;
+				WakeLockHold wakeLockHoldState  = new WakeLockHold(this, idleTime, this, mScreenWL);
 				mScreenWL = wakeLockHoldState.getWakeLock();
 				mState = wakeLockHoldState; /* update reference to new wakelock */
 				/* start with the green notification icon */
@@ -84,7 +86,7 @@ public class EcoScreenService extends Service implements StateListener, Activity
 
 		}
 		else
-			Log.e("EcoScreenService.onStartCommand", "state already " + mState.getType());
+			Log.e("EcoScreenService.onStartCommand", "state already " + mState.getType() + "wakelock " + mScreenWL);
 		return Service.START_STICKY;
 	}
 

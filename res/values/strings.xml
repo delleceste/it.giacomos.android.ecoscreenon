@@ -26,14 +26,27 @@
         <item>Visible When Detecting</item>
     </string-array>
     
-        <string name="inclination_activates_screen">Device Inclination Activates Screen</string>
-        <string name="device_movement_activates_screen">Motion Activates Screen</string>
+    
+    <string-array name="screen_timeo_spinner_entries">
+        <item>15 seconds</item>
+        <item>30 seconds</item>
+        <item>1 minute</item>
+        <item>2 minutes</item>
+        <item>5 minutes</item>
+        <item>10 minutes</item>
+        <item>Invalid</item>
+    </string-array>
+    
+        <string name="inclination_activates_screen">Simulation: incline device!</string>
+        <string name="device_movement_activates_screen">Simulation: move device</string>
         
-         <string name="inclination_doesnt_activate_screen">Incline it!</string>
-        <string name="device_movement_doesnt_activate_screen">Shake it!</string>
+         <string name="inclination_doesnt_activate_screen">Simulation:  incline device</string>
+        <string name="device_movement_doesnt_activate_screen">Simulation: shake device a little</string>
         <string name="current_timeout_is">Current Screen Timeout Is</string>
         <string name="default_timeout_s_60">60</string>
         <string name="seconds">s</string>
-        <string name="start_detection_after_seconds">"Start Detection After "</string>
+        <string name="start_detection_after_seconds">&quot;Detection Time&quot;</string>
+        <string name="change_screen_timeout">Screen Timeout</string>
+        <string name="make_tour">Make a Tour!</string>
 
 </resources>
