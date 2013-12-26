@@ -1,16 +1,17 @@
-package it.giacomos.android.ecosmartscreenon.service;
+package it.giacomos.android.ecosmartscreenon.service.state;
 
+import it.giacomos.android.ecosmartscreenon.service.Action;
 import android.os.Handler;
 
 
-public abstract class IdleSensorsWakelockHandlerState implements State, Runnable
+public abstract class IdleSensorsWakelockHandler implements State, Runnable
 {
 
 	private Handler mHandler;
 	private StateListener mStateListener;
 	private Action mAction;
 	
-	public IdleSensorsWakelockHandlerState(int timeout, StateListener sl)
+	public IdleSensorsWakelockHandler(int timeout, StateListener sl)
 	{
 		mHandler = new Handler();
 		mHandler.postDelayed(this, timeout);

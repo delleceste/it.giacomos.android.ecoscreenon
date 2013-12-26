@@ -1,15 +1,15 @@
-package it.giacomos.android.ecosmartscreenon.service;
+package it.giacomos.android.ecosmartscreenon.service.state;
 
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
-public class WakeLockHoldState extends IdleSensorsWakelockHandlerState 
+public class WakeLockHold extends IdleSensorsWakelockHandler 
 {
 	private WakeLock mWakeLock;
 	
-	public WakeLockHoldState(Context ctx, int timeout, StateListener sl, WakeLock screenWL) 
+	public WakeLockHold(Context ctx, int timeout, StateListener sl, WakeLock screenWL) 
 	{
 		super(timeout, sl);
 		if(screenWL == null)

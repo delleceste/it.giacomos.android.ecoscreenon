@@ -4,16 +4,21 @@ package it.giacomos.android.ecosmartscreenon.service;
 
 import it.giacomos.android.ecosmartscreenon.R;
 import it.giacomos.android.ecosmartscreenon.SettingsActivity;
+import it.giacomos.android.ecosmartscreenon.service.state.State;
+import it.giacomos.android.ecosmartscreenon.service.state.Detecting;
+import it.giacomos.android.ecosmartscreenon.service.state.DetectingProximity;
+import it.giacomos.android.ecosmartscreenon.service.state.StateListener;
+import it.giacomos.android.ecosmartscreenon.service.state.StateType;
+import it.giacomos.android.ecosmartscreenon.service.state.WakeLockHold;
+import it.giacomos.android.ecosmartscreenon.service.state.WakeLockRelease;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
@@ -26,12 +31,10 @@ public class EcoScreenService extends Service implements StateListener, Activity
 	public static String CONFIG_CHANGE_INTENT = "config-change-intent";
 
 	private Configuration mConfiguration;
-	private int mEcoScreenServiceId = 100;
 	private State mState;
 	private String mNotificationTitle;
 	private final int mNotificationID = 1;
 	private WakeLock mScreenWL;
-	private SharedPreferences mSharedPrefs;
 	private ActivityBroadcastReceiver mActivityBroadcastReceiver;
 
 	public EcoScreenService()
@@ -53,21 +56,14 @@ public class EcoScreenService extends Service implements StateListener, Activity
 
 			Log.e("EcoScreenService.onStartCommand", "service started, screen timeo = " + mConfiguration.mScreenTimeo);
 
-
-			/// TEMP!!
-			/// mScreenTimeo = 20000;
-
-			if(mConfiguration.mScreenTimeo > 10000)
+			if(mConfiguration.isValid())
 			{
-				mConfiguration.mMigrateToActiveTimeo = mConfiguration.mScreenTimeo - 10000;
-
 				/* when screen goes on we start in IDLE state */
-				WakeLockHoldState wakeLockHoldState  = new WakeLockHoldState(this, mConfiguration.mMigrateToActiveTimeo, this, mScreenWL);
+				WakeLockHold wakeLockHoldState  = new WakeLockHold(this, mConfiguration.mDetectingTime, this, mScreenWL);
 				mScreenWL = wakeLockHoldState.getWakeLock();
 				mState = wakeLockHoldState; /* update reference to new wakelock */
 				/* start with the green notification icon */
 				mBuildNotification(Action.KEEP_ON);
-				
 			}
 			else
 			{
@@ -101,25 +97,28 @@ public class EcoScreenService extends Service implements StateListener, Activity
 	@Override
 	public void onStateLeaving(StateType t, Action a) 
 	{
+		int idleTime = mConfiguration.mScreenTimeo - mConfiguration.mDetectingTime -
+				DetectingProximity.PROXIMITY_DETECTION_TIME;
+		
 		Log.e("onStateLeaving", "type " + t + " action " + a);
 		/* Action.CANCELLED cannot be set */
 		if(a == Action.NONE)
 		{
 			Log.e("EcoScreenService.onStateLeaving", "RELEASING WAKE LOCK BRIGHT Action " + a);
 			//			Toast.makeText(this, "No user action detected", Toast.LENGTH_LONG).show();
-			mState = new WakeLockReleaseState(mConfiguration.mMigrateToActiveTimeo, this, mScreenWL);
+			mState = new WakeLockRelease(idleTime, this, mScreenWL);
 		}
 		else if(t == StateType.DETECTING && a == Action.KEEP_ON)
 		{
-			/* must test proximity */
-			mState = new StateDetectingProximity(this, this);
+			/* must test proximity. This state lasts  DetectingProximity.PROXIMITY_DETECTION_TIME */
+			mState = new DetectingProximity(this, this);
 		}
 		else if(t == StateType.DETECTING_PROXIMITY && a == Action.KEEP_ON)
 		{
-			//			Toast.makeText(this, "Triggering user action and waiting other " + mMigrateToActiveTimeo + "ms", Toast.LENGTH_LONG).show();
+			//			Toast.makeText(this, "Triggering user action and waiting other " + mdetectingTime + "ms", Toast.LENGTH_LONG).show();
 			/* Otherwise the screen lock is already allocated and held */
 			/* restart cycle */
-			WakeLockHoldState wakeLockHoldState = new WakeLockHoldState(this, mConfiguration.mMigrateToActiveTimeo, this, mScreenWL);
+			WakeLockHold wakeLockHoldState = new WakeLockHold(this, idleTime, this, mScreenWL);
 			mState = wakeLockHoldState;
 			/* keep reference to the new wakelock */
 			mScreenWL = wakeLockHoldState.getWakeLock();
@@ -127,7 +126,7 @@ public class EcoScreenService extends Service implements StateListener, Activity
 		else if(mState.isSensorsIdleState() && a == Action.IDLE_SENSORS_TIMEOUT)
 		{
 			//			Toast.makeText(this, "Going to DetectMode ", Toast.LENGTH_SHORT).show();
-			StateDetecting sDetect = new StateDetecting(this, mConfiguration.mScreenTimeo - mConfiguration.mMigrateToActiveTimeo, 
+			Detecting sDetect = new Detecting(this, mConfiguration.mDetectingTime, 
 					this, mConfiguration.getMotionSensitivityValues());
 			sDetect.setThresholds(mConfiguration.mXInclinationThresh, mConfiguration.mYInclinationThresh);
 			mState = sDetect;
@@ -228,13 +227,6 @@ public class EcoScreenService extends Service implements StateListener, Activity
 	}
 
 	@Override
-	/* update the icon */
-	public void onKeepOnRenewal(Action a) 
-	{
-		mBuildNotification(a);
-	}
-
-	@Override
 	public void onMessageReceived(Intent intent) 
 	{
 		Log.e("EcoScreenService.onMessageReceived", intent.getAction());
@@ -245,5 +237,4 @@ public class EcoScreenService extends Service implements StateListener, Activity
 				mBuildNotification(mState.getAction());
 		}
 	}
-
 }

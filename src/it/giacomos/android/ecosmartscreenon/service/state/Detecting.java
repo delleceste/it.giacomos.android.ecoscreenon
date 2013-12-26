@@ -1,5 +1,8 @@
-package it.giacomos.android.ecosmartscreenon.service;
+package it.giacomos.android.ecosmartscreenon.service.state;
 
+import it.giacomos.android.ecosmartscreenon.service.Action;
+import it.giacomos.android.ecosmartscreenon.service.MotionSensitivityValues;
+import it.giacomos.android.ecosmartscreenon.service.NotificationViewIntentListener;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
@@ -9,7 +12,7 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.util.Log;
 
-public class StateDetecting implements State, SensorEventListener, Runnable
+public class Detecting implements State, SensorEventListener, Runnable
 {
 
 	private SensorManager mSensorManager;
@@ -27,7 +30,7 @@ public class StateDetecting implements State, SensorEventListener, Runnable
 	private Handler mHandler;
 
 
-	public StateDetecting(Context ctx,
+	public Detecting(Context ctx,
 			int timeoutMillis, 
 			StateListener sl, 
 			MotionSensitivityValues msv)

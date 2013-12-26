@@ -1,5 +1,6 @@
-package it.giacomos.android.ecosmartscreenon.service;
+package it.giacomos.android.ecosmartscreenon.service.state;
 
+import it.giacomos.android.ecosmartscreenon.service.Action;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -8,7 +9,7 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.util.Log;
 
-public class StateDetectingProximity implements State, 
+public class DetectingProximity implements State, 
 SensorEventListener, Runnable
 {
 	public static final int PROXIMITY_DETECTION_TIME = 2000;
@@ -19,7 +20,7 @@ SensorEventListener, Runnable
 	private Handler mHandler;
 	private StateListener mStateListener;
 	
-	public StateDetectingProximity(Context ctx, StateListener sl)
+	public DetectingProximity(Context ctx, StateListener sl)
 	{
 		mNear = false;
 		mAction = Action.NONE;
